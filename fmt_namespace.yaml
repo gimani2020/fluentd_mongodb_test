@@ -1,8 +1,8 @@
 kind: Namespace
 apiVersion: v1
 metadata:
- name: fmt
+ name: fmtest
  labels:
-   k8s-app: fmt
+   k8s-app: fmtest
    kubernetes.io/cluster-service: "true"
    addonmanager.kubernetes.io/mode: Reconcile
