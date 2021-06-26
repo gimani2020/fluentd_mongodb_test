@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: fluentd
+  name: fmt_fluentd_config
   namespace: fmtest
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
