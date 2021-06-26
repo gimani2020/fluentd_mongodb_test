@@ -1,0 +1,42 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd
+  namespace: fmtest
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+data:
+  k8s.conf: |-
+    <source>
+      @type tail
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd/fluentd-docker.pos
+      time_format %Y-%m-%dT%H:%M:%S
+      tag kubernetes.*
+      format json
+      read_from_head true
+    </source>
+    <filter kubernetes.var.log.containers.**.log>
+      @type kubernetes_metadata
+      ca_file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file /var/run/secrets/kubernetes.io/serviceaccount/token
+    </filter>
+ 
+    <match **>
+      @type mongo
+      database k8s
+      collection containers
+      host mongo.mind-automl
+      port 27017
+      <buffer>
+        flush_mode interval
+        retry_type exponential_backoff
+        flush_thread_count 2
+        flush_interval 5s
+        retry_forever
+        retry_max_interval 30
+        chunk_limit_size 2M
+        queue_limit_length 8
+        overflow_action block
+      </buffer>
+    </match>
