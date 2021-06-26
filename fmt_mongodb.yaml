@@ -1,0 +1,72 @@
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      iconClass: icon-mongodb
+      tags: database,mongodb
+    labels:
+      app: logging-fluentd
+      name: logging-fluentd-mongodb
+    name: logging-fluentd-mongodb
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: logging-fluentd
+        name: logging-fluentd-mongodb
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: logging-fluentd
+          name: logging-fluentd-mongodb
+      spec:
+        containers:
+        - name: mongodb
+          env:
+          - name: MONGODB_USER
+            value: user
+          - name: MONGODB_PASSWORD
+            value: test123
+          - name: MONGODB_DATABASE
+            value: test_db
+          - name: MONGODB_ADMIN_PASSWORD
+            value: test1234
+          image: centos/mongodb-32-centos7:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 300m
+              memory: 1Gi
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017
+            timeoutSeconds: 1
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
+                --eval="quit()"
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/mongodb/data
+            name: logging-fluentd-mongodb-data
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - name: logging-fluentd-mongodb-data
+          persistentVolumeClaim:
+            claimName: logging-fluentd-mongodb-data
+kind: List
+metadata: {}
