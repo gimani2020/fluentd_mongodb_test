@@ -4,6 +4,7 @@
     labels:
       app: logging-fluentd
     name: logging-fluentd
+    namespace: fmtest
   spec:
     selector:
       matchLabels:
