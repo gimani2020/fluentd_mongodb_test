@@ -1,0 +1,87 @@
+- apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    labels:
+      app: logging-fluentd
+    name: logging-fluentd
+  spec:
+    selector:
+      matchLabels:
+        logging: logging-fluentd
+    template:
+      metadata:
+        labels:
+          logging: logging-fluentd
+        name: logging-fluentd
+      spec:
+        containers:
+        - name: fluentd
+          env:
+          - name: K8S_HOST_URL
+            value: https://kubernetes.default.svc.cluster.local
+          - name: USE_JOURNAL
+            value: "false"
+          - name: MONGODB_HOSTNAME
+            value: logging-fluentd-mongodb
+          - name: MONGODB_PORT
+            value: "27017"
+          - name: MONGODB_DATABASE
+            value: logging
+          - name: MONGODB_COLLECTION
+            value: logs
+          - name: MONGODB_USERNAME
+            value: userPSU
+          - name: MONGODB_PASSWORD
+            value: maoFn3LAfvxxSnVf
+          image: caruccio/logging-fluentd:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /run/log/journal
+            name: runlogjournal
+          - mountPath: /var/log
+            name: varlog
+          - mountPath: /var/lib/docker/containers
+            name: varlibdockercontainers
+            readOnly: true
+          - mountPath: /etc/docker-hostname
+            name: dockerhostname
+            readOnly: true
+          - mountPath: /etc/localtime
+            name: localtime
+            readOnly: true
+          - mountPath: /etc/sysconfig/docker
+            name: dockercfg
+            readOnly: true
+        #nodeSelector:
+        #  role: "worker"
+        serviceAccount: logging-fluentd
+        serviceAccountName: logging-fluentd
+        terminationGracePeriodSeconds: 30
+        restartPolicy: Always
+        dnsPolicy: ClusterFirst
+        volumes:
+        - hostPath:
+            path: /run/log/journal
+          name: runlogjournal
+        - hostPath:
+            path: /var/log
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: varlibdockercontainers
+        - hostPath:
+            path: /etc/hostname
+          name: dockerhostname
+        - hostPath:
+            path: /etc/localtime
+          name: localtime
+        - hostPath:
+            path: /etc/sysconfig/docker
+          name: dockercfg
