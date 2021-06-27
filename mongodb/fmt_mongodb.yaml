@@ -1,0 +1,105 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: fmt-lbl
+    name: fmt-mongodb
+  spec:
+    ports:
+    - name: mongo
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      app: fmt-lbl
+      name: fmt-mongodb
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: fmt-lbl
+    name: fmt-mongodb-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 30Gi
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      iconClass: icon-mongodb
+      tags: database,mongodb
+    labels:
+      app: fmt-lbl
+      name: fmt-mongodb
+    name: fmt-mongodb
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: fmt-lbl
+        name: fmt-mongodb
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: fmt-lbl
+          name: fmt-mongodb
+      spec:
+        containers:
+        - name: mongodb
+          env:
+          - name: MONGODB_USER
+            value: user
+          - name: MONGODB_PASSWORD
+            value: fmt1234
+          - name: MONGODB_DATABASE
+            value: fmt
+          - name: MONGODB_ADMIN_PASSWORD
+            value: fmt12345
+          image: centos/mongodb-32-centos7:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 300m
+              memory: 1Gi
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017
+            timeoutSeconds: 1
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
+                --eval="quit()"
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/mongodb/data
+            name: fmt-mongodb-data
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - name: fmt-mongodb-data
+          persistentVolumeClaim:
+            claimName: fmt-mongodb-data
+kind: List
+metadata: {}
