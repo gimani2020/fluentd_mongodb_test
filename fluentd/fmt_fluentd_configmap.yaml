@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: fmt_fluentd_config
+  name: fmt-fluentd-config-v0.1
   namespace: fmtest
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
@@ -24,9 +24,9 @@ data:
  
     <match **>
       @type mongo
-      database k8s
-      collection containers
-      host mongo.mind-automl
+      database fmt
+      collection fmt_cl
+      host fmt-mongodb 
       port 27017
       <buffer>
         flush_mode interval
