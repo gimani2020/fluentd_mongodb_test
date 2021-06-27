@@ -1,19 +1,60 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    labels:
+      app: fmt-lbl
+    name: fmt-lbl
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+     name: fmt-lbl
+     namespace: fmtest
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - namespaces
+    - services
+    - deployments
+    - jobs" 
+    verbs:
+    - get
+    - list
+    - watch
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: fmt-lbl
+  subjects:
+  - kind: ServiceAccount
+    name: fmt-lbl
+    namespace: fmtest
+  roleRef:
+    kind: ClusterRole
+    name: fmt-lbl
+    apiGroup: rbac.authorization.k8s.io
+
 - apiVersion: apps/v1
   kind: DaemonSet
   metadata:
     labels:
-      app: logging-fluentd
-    name: logging-fluentd
-    namespace: fmtest
+      addonmanager.kubernetes.io/mode: Reconcile
+      app: fmt-lbl
+    name: fmt-lbl
   spec:
     selector:
       matchLabels:
-        logging: logging-fluentd
+        logging: fmt-lbl
     template:
       metadata:
         labels:
-          logging: logging-fluentd
-        name: logging-fluentd
+          logging: fmt-lbl
+        name: fmt-lbl
       spec:
         containers:
         - name: fluentd
@@ -23,11 +64,11 @@
           - name: USE_JOURNAL
             value: "false"
           - name: MONGODB_HOSTNAME
-            value: fmt_mongodb
+            value: fmt-mongodb
           - name: MONGODB_PORT
             value: "27017"
           - name: MONGODB_DATABASE
-            value: fmt_db
+            value: fmt
           - name: MONGODB_COLLECTION
             value: fmt_cl
           - name: MONGODB_USERNAME
@@ -40,8 +81,6 @@
             limits:
               cpu: 100m
               memory: 512Mi
-          securityContext:
-            privileged: true
           terminationMessagePath: /dev/termination-log
           volumeMounts:
           - name: varlog
@@ -50,13 +89,15 @@
             mountPath: /var/lib/docker/containers
             readOnly: true
           - name: config-volume
-            mountPath: /etc/fluent/config.d
-        #nodeSelector:
-        #  role: "worker"
-        serviceAccount: logging-fluentd
-        serviceAccountName: logging-fluentd
+            mountPath: /etc/fluent/config.d        
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+        priorityClassName: system-node-critical
+        serviceAccount: fmt-lbl
+        serviceAccountName: fmt-lbl
         terminationGracePeriodSeconds: 30
-        restartPolicy: Always
+        #restartPolicy: Always
         dnsPolicy: ClusterFirst
         volumes:
         - name: varlog
@@ -67,4 +108,7 @@
             path: /var/lib/docker/containers
         - name: config-volume
           configMap:
-            name: fmt_fluentd_config
+            name: fmt-fluentd-config-v0.1
+          
+kind: List
+metadata: {}            
