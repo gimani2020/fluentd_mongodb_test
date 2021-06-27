@@ -1,3 +1,36 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: fmt-lbl
+    name: fmt-mongodb
+  spec:
+    ports:
+    - name: mongo
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      app: fmt-lbl
+      name: fmt-mongodb
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: fmt-lbl
+    name: fmt-mongodb-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 30Gi
+
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -5,22 +38,22 @@
       iconClass: icon-mongodb
       tags: database,mongodb
     labels:
-      app: logging-fluentd
-      name: logging-fluentd-mongodb
-    name: logging-fluentd-mongodb
+      app: fmt-lbl
+      name: fmt-mongodb
+    name: fmt-mongodb
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: logging-fluentd
-        name: logging-fluentd-mongodb
+        app: fmt-lbl
+        name: fmt-mongodb
     strategy:
       type: Recreate
     template:
       metadata:
         labels:
-          app: logging-fluentd
-          name: logging-fluentd-mongodb
+          app: fmt-lbl
+          name: fmt-mongodb
       spec:
         containers:
         - name: mongodb
@@ -28,11 +61,11 @@
           - name: MONGODB_USER
             value: user
           - name: MONGODB_PASSWORD
-            value: test123
+            value: fmt1234
           - name: MONGODB_DATABASE
-            value: test_db
+            value: fmt
           - name: MONGODB_ADMIN_PASSWORD
-            value: test1234
+            value: fmt12345
           image: centos/mongodb-32-centos7:latest
           imagePullPolicy: IfNotPresent
           resources:
@@ -60,13 +93,13 @@
           terminationMessagePath: /dev/termination-log
           volumeMounts:
           - mountPath: /var/lib/mongodb/data
-            name: logging-fluentd-mongodb-data
+            name: fmt-mongodb-data
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         volumes:
-        - name: logging-fluentd-mongodb-data
+        - name: fmt-mongodb-data
           persistentVolumeClaim:
-            claimName: logging-fluentd-mongodb-data
+            claimName: fmt-mongodb-data
 kind: List
 metadata: {}
