@@ -8,6 +8,7 @@ echo "apply setup"
 kubectl -n fmtest apply -f output/stdout-app.yaml
 kubectl -n fmtest apply -f output/stderr-app.yaml
 kubectl -n fmtest apply -f mongodb/fmt_mongodb.yaml
+kubectl -n fmtest apply -f fluentd/fmt_fluentd_configmap.yaml
 kubectl -n fmtest apply -f fluentd/fmt_fluentd.yaml
 echo "waiting for all pods in namespace fmtest to be ready:"
 kubectl -n fmtest get pod
