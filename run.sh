@@ -5,8 +5,8 @@ kubectl delete namespace fmtest
 echo "cretae namespace fmtest"
 kubectl create namespace fmtest
 echo "apply setup"
-kubectl -n fmtest apply -f stdout-app.yaml
-kubectl -n fmtest apply -f stderr-app.yaml
+kubectl -n fmtest apply -f output/stdout-app.yaml
+kubectl -n fmtest apply -f output/stderr-app.yaml
 kubectl -n fmtest apply -f mongodb/fmt_mongodb.yaml
 kubectl -n fmtest apply -f fluentd/fmt_fluentd.yaml
 echo "waiting for all pods in namespace fmtest to be ready:"
